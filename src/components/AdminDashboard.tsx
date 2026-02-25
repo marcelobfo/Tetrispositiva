@@ -158,10 +158,10 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-6 h-[calc(100vh-180px)]"
+              className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start"
             >
               {PERFIS.map((perfil, idx) => (
-                <div key={perfil} className="flex flex-col h-full">
+                <div key={perfil} className="flex flex-col">
                   <div className="flex items-center justify-between mb-4 px-2">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
@@ -172,7 +172,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                     </span>
                   </div>
                   
-                  <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar max-h-[520px] pb-4">
                     {filteredLeads.filter(l => l.perfil === perfil).map(lead => (
                       <motion.div
                         layoutId={lead.id}
@@ -367,15 +367,26 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                 </div>
 
                 <div className="pt-4">
-                  <a 
-                    href={`https://wa.me/${selectedLead.whatsapp.replace(/\D/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-5 bg-olive-600 text-white font-bold rounded-2xl hover:bg-olive-700 transition-all flex items-center justify-center shadow-lg shadow-olive-600/20"
-                  >
-                    Entrar em contato via WhatsApp
-                    <ChevronRight className="ml-2 w-5 h-5" />
-                  </a>
+                  {(() => {
+                    const cleanPhone = selectedLead.whatsapp.replace(/\D/g, '');
+                    const finalPhone = cleanPhone.startsWith('0') 
+                      ? '55' + cleanPhone.substring(1) 
+                      : cleanPhone.startsWith('55') 
+                        ? cleanPhone 
+                        : '55' + cleanPhone;
+                    
+                    return (
+                      <a 
+                        href={`https://wa.me/${finalPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-5 bg-olive-600 text-white font-bold rounded-2xl hover:bg-olive-700 transition-all flex items-center justify-center shadow-lg shadow-olive-600/20"
+                      >
+                        Entrar em contato via WhatsApp
+                        <ChevronRight className="ml-2 w-5 h-5" />
+                      </a>
+                    );
+                  })()}
                 </div>
               </div>
             </motion.div>

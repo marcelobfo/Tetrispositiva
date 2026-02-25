@@ -237,7 +237,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-8 overflow-x-hidden">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-8 overflow-x-hidden">
       {/* Header / Logo */}
       <header className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 bg-white/80 backdrop-blur-sm border-b border-olive-50">
         <img 
@@ -262,7 +262,7 @@ export default function App() {
         )}
       </header>
 
-      <main className="w-full max-w-2xl pt-16 pb-12">
+      <main className="w-full max-w-2xl pt-36 sm:pt-52 pb-24 flex-1 flex flex-col">
         <AnimatePresence mode="wait">
           {step === 'welcome' && (
             <motion.div
@@ -270,7 +270,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-10"
+              className="text-center space-y-10 my-auto"
             >
               <div className="space-y-6">
                 <motion.div
@@ -320,7 +320,7 @@ export default function App() {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -30 }}
-              className="space-y-10"
+              className="space-y-10 my-auto"
             >
               {/* Progress Bar */}
               <div className="fixed top-0 left-0 w-full h-1.5 bg-olive-50 z-[60]">
@@ -387,7 +387,7 @@ export default function App() {
               key="lead"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white p-8 sm:p-14 rounded-[3rem] border border-olive-100 shadow-2xl shadow-olive-900/5 space-y-10"
+              className="bg-white p-8 sm:p-14 rounded-[3rem] border border-olive-100 shadow-2xl shadow-olive-900/5 space-y-10 my-auto"
             >
               <div className="text-center space-y-3">
                 <div className="inline-flex p-3 bg-olive-50 rounded-2xl text-olive-600 mb-2">
@@ -472,7 +472,7 @@ export default function App() {
               key="result"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-10"
+              className="space-y-10 my-auto"
             >
               <div className="bg-white p-10 sm:p-16 rounded-[3.5rem] border border-olive-100 shadow-2xl shadow-olive-900/10 text-center space-y-10 relative overflow-hidden">
                 <div className="space-y-6 relative z-10">
