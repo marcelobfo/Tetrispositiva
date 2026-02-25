@@ -2,6 +2,12 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -99,11 +105,24 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    
+    // Fallback for SPA routing in development if vite doesn't catch it
+    app.get("*", async (req, res, next) => {
+      if (req.url.startsWith('/api')) return next();
+      try {
+        const template = fs.readFileSync(path.resolve(__dirname, "index.html"), "utf-8");
+        const html = await vite.transformIndexHtml(req.url, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(html);
+      } catch (e) {
+        vite.ssrFixStacktrace(e as Error);
+        next(e);
+      }
+    });
   } else {
     // Serve static files in production
     app.use(express.static("dist"));
     app.get("*", (req, res) => {
-      res.sendFile("dist/index.html", { root: "." });
+      res.sendFile("index.html", { root: "dist" });
     });
   }
 
