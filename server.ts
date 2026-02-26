@@ -17,6 +17,11 @@ async function startServer() {
 
   app.use(express.json());
 
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+
   // Supabase client with service_role key (server-side only)
   const supabaseUrl = process.env.SUPABASE_URL || '';
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';

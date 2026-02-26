@@ -175,12 +175,17 @@ export default function App() {
     loadData();
   }, []);
 
-  // Handle routing for /dashboard
+  // Handle routing for /dashboard and diagnostic slugs
   useEffect(() => {
-    if (window.location.pathname === '/dashboard') {
+    const path = window.location.pathname;
+    if (path === '/dashboard') {
       setStep('admin');
+    } else if (step === 'admin') {
+      // Se o estado estiver como admin mas o caminho não for /dashboard,
+      // reseta para o início (welcome) para permitir ver o diagnóstico
+      setStep('welcome');
     }
-  }, []);
+  }, [step]); // Re-check when step changes or on mount
 
   const handleAdminLogin = () => {
     setIsAdminAuthenticated(true);
