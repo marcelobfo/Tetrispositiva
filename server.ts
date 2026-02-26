@@ -67,7 +67,7 @@ async function startServer() {
   });
 
   // Diagnostics API
-  app.get("/api/diagnosticos", async (req, res) => {
+  app.get(["/api/diagnosticos", "/api/diagnosticos/"], async (req, res) => {
     try {
       const { data, error } = await supabase
         .from('diagnosticos')
@@ -80,7 +80,7 @@ async function startServer() {
     }
   });
 
-  app.get("/api/diagnosticos/:slug", async (req, res) => {
+  app.get(["/api/diagnosticos/:slug", "/api/diagnosticos/:slug/"], async (req, res) => {
     try {
       const { slug } = req.params;
       const { data: diagnostico, error: diagError } = await supabase

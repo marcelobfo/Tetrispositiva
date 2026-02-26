@@ -102,7 +102,18 @@ export default function App() {
           if (slug.endsWith('/')) slug = slug.slice(0, -1);
         }
 
-        const data = await getDiagnosticBySlug(slug);
+        const response = await fetch(slug === 'diagnostico-financeiro' ? '/api/diagnosticos/diagnostico-financeiro' : `/api/diagnosticos/${slug}`);
+        
+        const contentType = response.headers.get("content-type");
+        if (!response.ok || !contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          if (text.includes("<!doctype html>") || text.includes("<html")) {
+            throw new Error("O servidor retornou HTML em vez de JSON. Verifique se as rotas de API estão acessíveis.");
+          }
+          throw new Error(`Erro na API: ${response.status}`);
+        }
+
+        const data = await response.json();
         
         // Map database structure to our frontend interface
         const mappedDiag: Diagnostico = {
