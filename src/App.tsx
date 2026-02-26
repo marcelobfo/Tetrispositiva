@@ -93,8 +93,13 @@ export default function App() {
         const path = window.location.pathname;
         let slug = 'diagnostico-financeiro'; // Default slug
 
-        if (path.startsWith('/d/')) {
-          slug = path.split('/d/')[1];
+        // Se não for a home e não for o dashboard, o caminho é o slug
+        if (path !== '/' && path !== '/dashboard') {
+          // Suporta tanto /d/slug quanto /slug
+          slug = path.startsWith('/d/') ? path.substring(3) : path.substring(1);
+          
+          // Remover barra final se existir
+          if (slug.endsWith('/')) slug = slug.slice(0, -1);
         }
 
         const data = await getDiagnosticBySlug(slug);
