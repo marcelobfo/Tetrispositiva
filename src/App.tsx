@@ -19,7 +19,9 @@ import {
   User,
   Loader2,
   RotateCcw,
-  Clock
+  Clock,
+  AlertTriangle,
+  Target
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,11 +29,11 @@ import * as z from 'zod';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import { perguntas } from './data/questions';
-import { Step, LeadData, QuizResult } from './types';
-import { saveLead } from './services/supabase';
+import { Step, LeadData, QuizResult, Diagnostico } from './types';
+import { saveLead, getDiagnostics, getDiagnosticBySlug } from './services/supabase';
 import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
+import { PERFIL_DATA } from './constants';
 
 // Utility for tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -48,6 +50,9 @@ const LOGO_URL = "https://tetrispositiva.com.br/wp-content/uploads/2026/01/Ale-P
 const STORAGE_KEY = 'diagnostico_financeiro_state';
 
 export default function App() {
+  const [diagnostico, setDiagnostico] = useState<Diagnostico | null>(null);
+  const [loadingDiag, setLoadingDiag] = useState(true);
+
   // State initialization with localStorage recovery
   const [step, setStep] = useState<Step>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -80,6 +85,91 @@ export default function App() {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(!!localStorage.getItem('admin_token'));
 
+  // Load diagnostic data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingDiag(true);
+        const path = window.location.pathname;
+        let slug = 'diagnostico-financeiro'; // Default slug
+
+        if (path.startsWith('/d/')) {
+          slug = path.split('/d/')[1];
+        }
+
+        const data = await getDiagnosticBySlug(slug);
+        
+        // Map database structure to our frontend interface
+        const mappedDiag: Diagnostico = {
+          ...data,
+          perguntas: (data.perguntas || []).map((p: any) => ({
+            id: p.id,
+            pergunta: p.texto,
+            opcoes: (p.opcoes || []).map((o: any) => ({
+              id: o.id,
+              texto: o.texto,
+              pontos: o.pontos
+            }))
+          })),
+          perfis: (data.perfis_resultado || []).map((p: any) => ({
+            id: p.id,
+            perfil: p.perfil,
+            pontuacaoMin: p.pontuacao_min,
+            pontuacaoMax: p.pontuacao_max,
+            nivel: p.nivel,
+            descricao: p.descricao,
+            riscoPrincipal: p.risco_principal,
+            solucaoRecomendada: p.solucao_recomendada,
+            sinais: Array.isArray(p.sinais) ? p.sinais : [],
+            planoEvolucao: Array.isArray(p.plano_evolucao) ? p.plano_evolucao : []
+          }))
+        };
+        
+        setDiagnostico(mappedDiag);
+      } catch (err) {
+        console.error("Erro ao carregar diagnóstico:", err);
+        // Fallback to first active diagnostic if slug not found
+        try {
+          const all = await getDiagnostics();
+          if (all.length > 0) {
+            const first = await getDiagnosticBySlug(all[0].slug);
+            // Map again... (should probably refactor this into a mapper function)
+            setDiagnostico({
+              ...first,
+              perguntas: (first.perguntas || []).map((p: any) => ({
+                id: p.id,
+                pergunta: p.texto,
+                opcoes: (p.opcoes || []).map((o: any) => ({
+                  id: o.id,
+                  texto: o.texto,
+                  pontos: o.pontos
+                }))
+              })),
+              perfis: (first.perfis_resultado || []).map((p: any) => ({
+                id: p.id,
+                perfil: p.perfil,
+                pontuacaoMin: p.pontuacao_min,
+                pontuacaoMax: p.pontuacao_max,
+                nivel: p.nivel,
+                descricao: p.descricao,
+                riscoPrincipal: p.risco_principal,
+                solucaoRecomendada: p.solucao_recomendada,
+                sinais: Array.isArray(p.sinais) ? p.sinais : [],
+                planoEvolucao: Array.isArray(p.plano_evolucao) ? p.plano_evolucao : []
+              }))
+            });
+          }
+        } catch (innerErr) {
+          console.error("Erro fatal ao carregar diagnósticos:", innerErr);
+        }
+      } finally {
+        setLoadingDiag(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   // Handle routing for /dashboard
   useEffect(() => {
     if (window.location.pathname === '/dashboard') {
@@ -102,8 +192,11 @@ export default function App() {
     resolver: zodResolver(leadSchema),
   });
 
-  const totalQuestions = perguntas.length;
-  const progress = useMemo(() => ((currentQuestionIndex + 1) / totalQuestions) * 100, [currentQuestionIndex, totalQuestions]);
+  const totalQuestions = diagnostico?.perguntas?.length || 0;
+  const progress = useMemo(() => {
+    if (totalQuestions === 0) return 0;
+    return ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  }, [currentQuestionIndex, totalQuestions]);
 
   // Persist state to localStorage
   useEffect(() => {
@@ -151,29 +244,54 @@ export default function App() {
   };
 
   const calculateResult = (total: number): QuizResult => {
-    if (total <= 31) return {
-      pontuacaoTotal: total,
-      perfil: "OPERADOR",
-      descricao: "Seu foco está na sobrevivência imediata. Você apaga incêndios diariamente e a gestão financeira ainda é um desafio reativo.",
-      nivel: 1
-    };
-    if (total <= 46) return {
-      pontuacaoTotal: total,
-      perfil: "TÁTICO",
-      descricao: "Você já possui organização básica, mas ainda falta visão estratégica para que o financeiro impulsione o crescimento real.",
-      nivel: 2
-    };
-    if (total <= 60) return {
-      pontuacaoTotal: total,
-      perfil: "ESTRATÉGICO",
-      descricao: "Sua gestão é sustentável. Você usa os números para planejar e manter a saúde do negócio com segurança.",
-      nivel: 3
-    };
+    if (!diagnostico || !diagnostico.perfis) {
+      // Fallback to static logic if something goes wrong
+      const getResultForRange = (t: number) => {
+        if (t <= 31) return { perfil: "OPERADOR", nivel: 1, desc: "Seu foco está na sobrevivência imediata." };
+        if (t <= 46) return { perfil: "TÁTICO", nivel: 2, desc: "Você já possui organização básica." };
+        if (t <= 60) return { perfil: "ESTRATÉGICO", nivel: 3, desc: "Sua gestão é sustentável." };
+        return { perfil: "DECISOR", nivel: 4, desc: "Você atingiu o nível de Lucro Livre." };
+      };
+      const base = getResultForRange(total);
+      return {
+        pontuacaoTotal: total,
+        perfil: base.perfil,
+        descricao: base.desc,
+        nivel: base.nivel,
+        sinais: [],
+        riscoPrincipal: "",
+        planoEvolucao: [],
+        solucaoRecomendada: ""
+      };
+    }
+
+    const perfilEncontrado = diagnostico.perfis.find(p => total >= p.pontuacaoMin && total <= p.pontuacaoMax);
+    
+    if (!perfilEncontrado) {
+      // If not found, use the closest one
+      const sortedPerfis = [...diagnostico.perfis].sort((a, b) => a.pontuacaoMin - b.pontuacaoMin);
+      const fallback = total < sortedPerfis[0].pontuacaoMin ? sortedPerfis[0] : sortedPerfis[sortedPerfis.length - 1];
+      return {
+        pontuacaoTotal: total,
+        perfil: fallback.perfil,
+        descricao: fallback.descricao,
+        nivel: fallback.nivel,
+        sinais: fallback.sinais,
+        riscoPrincipal: fallback.riscoPrincipal,
+        planoEvolucao: fallback.planoEvolucao,
+        solucaoRecomendada: fallback.solucaoRecomendada
+      };
+    }
+
     return {
       pontuacaoTotal: total,
-      perfil: "DECISOR",
-      descricao: "Você atingiu o nível de Lucro Livre. Suas decisões são baseadas em dados precisos e sua empresa é altamente escalável.",
-      nivel: 4
+      perfil: perfilEncontrado.perfil,
+      descricao: perfilEncontrado.descricao,
+      nivel: perfilEncontrado.nivel,
+      sinais: perfilEncontrado.sinais,
+      riscoPrincipal: perfilEncontrado.riscoPrincipal,
+      planoEvolucao: perfilEncontrado.planoEvolucao,
+      solucaoRecomendada: perfilEncontrado.solucaoRecomendada
     };
   };
 
@@ -189,6 +307,7 @@ export default function App() {
       respostas,
       pontuacao_total: total,
       perfil: calculatedResult.perfil,
+      diagnostico_id: diagnostico?.id,
       created_at: new Date().toISOString(),
     };
 
@@ -218,12 +337,25 @@ export default function App() {
   };
 
   // Safety check for empty questions
-  if (!perguntas || perguntas.length === 0) {
+  if (loadingDiag) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white p-4">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin mx-auto text-olive-600" />
           <p className="text-olive-600 font-medium">Carregando diagnóstico...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!diagnostico) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+        <div className="text-center space-y-4">
+          <AlertTriangle className="w-12 h-12 mx-auto text-red-500" />
+          <h2 className="text-2xl font-bold text-olive-950">Nenhum diagnóstico encontrado</h2>
+          <p className="text-olive-600">Por favor, configure um diagnóstico no painel administrativo.</p>
+          <button onClick={() => setStep('admin')} className="px-6 py-2 bg-olive-900 text-white rounded-xl">Ir para Admin</button>
         </div>
       </div>
     );
@@ -284,12 +416,11 @@ export default function App() {
                 </motion.div>
                 
                 <h1 className="text-4xl sm:text-7xl font-bold text-olive-950 leading-[1.1] tracking-tight">
-                  Diagnóstico de Perfil <br />
-                  <span className="text-olive-500 italic font-serif font-light">Financeiro</span>
+                  {diagnostico.titulo}
                 </h1>
                 
                 <p className="text-lg sm:text-xl text-olive-700 max-w-lg mx-auto leading-relaxed font-light">
-                  Descubra como sua gestão está impactando o lucro e a escala do seu negócio hoje.
+                  {diagnostico.descricao}
                 </p>
               </div>
 
@@ -336,12 +467,12 @@ export default function App() {
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-olive-400 uppercase tracking-widest">Pergunta {currentQuestionIndex + 1}</span>
                   <h2 className="text-2xl sm:text-4xl font-medium text-olive-950 leading-tight tracking-tight">
-                    {perguntas[currentQuestionIndex].pergunta}
+                    {diagnostico.perguntas[currentQuestionIndex].pergunta}
                   </h2>
                 </div>
 
                 <div className="grid gap-4">
-                  {perguntas[currentQuestionIndex].opcoes.map((opcao, idx) => (
+                  {diagnostico.perguntas[currentQuestionIndex].opcoes.map((opcao, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleAnswer(opcao.pontos)}
@@ -470,112 +601,180 @@ export default function App() {
           {step === 'result' && result && (
             <motion.div
               key="result"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-10 my-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full max-w-4xl mx-auto space-y-12 pb-20"
             >
-              <div className="bg-white p-10 sm:p-16 rounded-[3.5rem] border border-olive-100 shadow-2xl shadow-olive-900/10 text-center space-y-10 relative overflow-hidden">
-                <div className="space-y-6 relative z-10">
+              {/* Hero Result Section */}
+              <section className="bg-white p-10 sm:p-20 rounded-[4rem] border border-olive-100 shadow-2xl shadow-olive-900/5 text-center space-y-10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-olive-200 via-olive-600 to-olive-200" />
+                
+                <div className="space-y-8 relative z-10">
                   <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", damping: 12 }}
-                    className="inline-flex items-center justify-center w-24 h-24 bg-olive-600 rounded-[2rem] text-white shadow-xl shadow-olive-600/30 mb-4"
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", damping: 12, delay: 0.2 }}
+                    className="inline-flex items-center justify-center w-28 h-28 bg-olive-600 rounded-[2.5rem] text-white shadow-2xl shadow-olive-600/40 mb-4"
                   >
-                    {result.nivel === 1 && <Zap className="w-12 h-12" />}
-                    {result.nivel === 2 && <BarChart3 className="w-12 h-12" />}
-                    {result.nivel === 3 && <ShieldCheck className="w-12 h-12" />}
-                    {result.nivel === 4 && <TrendingUp className="w-12 h-12" />}
+                    {result.nivel === 1 && <Zap className="w-14 h-14" />}
+                    {result.nivel === 2 && <BarChart3 className="w-14 h-14" />}
+                    {result.nivel === 3 && <ShieldCheck className="w-14 h-14" />}
+                    {result.nivel === 4 && <TrendingUp className="w-14 h-14" />}
                   </motion.div>
                   
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-olive-500 uppercase tracking-[0.4em]">Seu Perfil Comportamental</p>
-                    <h2 className="text-5xl sm:text-7xl font-bold text-olive-950 tracking-tighter">{result.perfil}</h2>
+                  <div className="space-y-3">
+                    <p className="text-sm font-bold text-olive-500 uppercase tracking-[0.5em]">Diagnóstico Concluído</p>
+                    <h2 className="text-6xl sm:text-8xl font-bold text-olive-950 tracking-tighter leading-none">
+                      Perfil <span className="text-olive-600">{result.perfil}</span>
+                    </h2>
                   </div>
                   
-                  <p className="text-xl text-olive-700 leading-relaxed max-w-lg mx-auto font-light">
+                  <p className="text-2xl text-olive-700 leading-relaxed max-w-2xl mx-auto font-light">
                     {result.descricao}
                   </p>
                 </div>
 
-                {/* Level Bar */}
-                <div className="space-y-4 max-w-md mx-auto">
-                  <div className="flex justify-between text-[10px] font-bold text-olive-400 uppercase tracking-widest">
-                    <span>Maturidade Financeira</span>
-                    <span className="text-olive-600">{result.pontuacaoTotal} / 72 Pontos</span>
+                {/* Level Progress */}
+                <div className="space-y-6 max-w-xl mx-auto pt-4">
+                  <div className="flex justify-between items-end">
+                    <div className="text-left">
+                      <p className="text-[10px] font-bold text-olive-400 uppercase tracking-widest mb-1">Status Atual</p>
+                      <p className="text-lg font-bold text-olive-900">Maturidade Nível {result.nivel}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-olive-400 uppercase tracking-widest mb-1">Pontuação</p>
+                      <p className="text-lg font-bold text-olive-600">{result.pontuacaoTotal} <span className="text-sm text-olive-300">/ 72</span></p>
+                    </div>
                   </div>
-                  <div className="h-5 bg-olive-50 rounded-full overflow-hidden p-1.5 border border-olive-100">
+                  <div className="h-4 bg-olive-50 rounded-full overflow-hidden p-1 border border-olive-100 shadow-inner">
                     <motion.div 
-                      className="bg-olive-600 h-full rounded-full shadow-sm"
+                      className="bg-olive-600 h-full rounded-full shadow-lg"
                       initial={{ width: 0 }}
                       animate={{ width: `${(result.pontuacaoTotal / 72) * 100}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      transition={{ duration: 2, ease: "circOut" }}
                     />
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-[9px] font-bold text-olive-300 uppercase tracking-tighter">
-                    <span className={cn(result.nivel >= 1 ? "text-olive-600" : "")}>Operador</span>
-                    <span className={cn(result.nivel >= 2 ? "text-olive-600" : "")}>Tático</span>
-                    <span className={cn(result.nivel >= 3 ? "text-olive-600" : "")}>Estratégico</span>
-                    <span className={cn(result.nivel >= 4 ? "text-olive-600" : "")}>Decisor</span>
+                  <div className="grid grid-cols-4 gap-4 text-[10px] font-bold text-olive-300 uppercase tracking-widest">
+                    <div className={cn("transition-colors duration-500", result.nivel >= 1 ? "text-olive-600" : "")}>Operador</div>
+                    <div className={cn("transition-colors duration-500", result.nivel >= 2 ? "text-olive-600" : "")}>Tático</div>
+                    <div className={cn("transition-colors duration-500", result.nivel >= 3 ? "text-olive-600" : "")}>Estratégico</div>
+                    <div className={cn("transition-colors duration-500", result.nivel >= 4 ? "text-olive-600" : "")}>Decisor</div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Detailed Insights Section */}
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Sinais e Riscos */}
+                <div className="space-y-8">
+                  <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-xl shadow-olive-900/5 space-y-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-olive-50 rounded-lg text-olive-600">
+                        <AlertTriangle className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-lg font-bold text-olive-900 uppercase tracking-wider">⚠️ Sinais Identificados</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {result.sinais.map((sinal, i) => (
+                        <motion.div 
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 + (i * 0.1) }}
+                          className="flex items-start space-x-3 bg-olive-50/30 p-4 rounded-2xl border border-olive-100/50"
+                        >
+                          <CheckCircle2 className="w-5 h-5 text-olive-600 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-olive-800 font-medium leading-tight">{sinal}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 shadow-xl shadow-red-900/5 space-y-4">
+                    <div className="flex items-center space-x-3 text-red-600">
+                      <div className="p-2 bg-white rounded-lg shadow-sm">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-lg font-bold uppercase tracking-wider">🚨 Risco Principal</h3>
+                    </div>
+                    <p className="text-lg text-red-900 font-medium leading-relaxed">
+                      {result.riscoPrincipal}
+                    </p>
                   </div>
                 </div>
 
-                <div className="pt-6">
+                {/* Plano e Solução */}
+                <div className="space-y-8">
+                  <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-xl shadow-olive-900/5 space-y-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-olive-50 rounded-lg text-olive-600">
+                        <TrendingUp className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-lg font-bold text-olive-900 uppercase tracking-wider">✅ Plano de Evolução</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {result.planoEvolucao.map((passo, i) => (
+                        <motion.div 
+                          key={i}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.6 + (i * 0.1) }}
+                          className="flex items-center space-x-4 bg-white p-4 rounded-2xl border border-olive-50 shadow-sm hover:border-olive-200 transition-colors"
+                        >
+                          <span className="w-8 h-8 rounded-full bg-olive-100 text-olive-600 text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                          <span className="text-sm text-olive-900 font-medium leading-tight">{passo}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-olive-900 p-10 rounded-[3rem] text-white space-y-6 shadow-2xl shadow-olive-900/30 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+                    <div className="flex items-center space-x-3 text-olive-300">
+                      <div className="p-2 bg-white/10 rounded-lg">
+                        <Target className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-lg font-bold uppercase tracking-wider">🎯 Solução Recomendada</h3>
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-3xl font-bold tracking-tight leading-tight">
+                        {result.solucaoRecomendada}
+                      </p>
+                      <div className="h-1 w-12 bg-olive-500 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Call to Action Section */}
+              <section className="bg-white p-10 sm:p-16 rounded-[4rem] border border-olive-100 shadow-2xl shadow-olive-900/5 text-center space-y-8">
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-bold text-olive-950">Pronto para o próximo nível?</h3>
+                  <p className="text-olive-600 max-w-xl mx-auto text-lg font-light">
+                    Agende uma conversa estratégica gratuita para entendermos como aplicar esse plano de evolução no seu negócio hoje.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col items-center space-y-6">
                   <a 
                     href="https://wa.me/553197396474" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-full py-6 bg-olive-950 text-white font-bold text-xl rounded-2xl hover:bg-black transition-all flex items-center justify-center group shadow-xl active:scale-[0.98]"
+                    className="inline-flex items-center px-12 py-6 bg-olive-950 text-white font-bold text-xl rounded-2xl hover:bg-black transition-all group shadow-2xl active:scale-[0.98]"
                   >
-                    Agendar Consultoria Estratégica
-                    <ArrowRight className="ml-2 w-6 h-6 transition-transform group-hover:translate-x-2" />
+                    Falar com Especialista no WhatsApp
+                    <ArrowRight className="ml-3 w-6 h-6 transition-transform group-hover:translate-x-2" />
                   </a>
-                  <p className="mt-5 text-sm text-olive-400 font-medium">
-                    Receba um plano de ação personalizado para escalar seu negócio.
-                  </p>
+                  
+                  <button 
+                    onClick={handleReset}
+                    className="text-olive-400 hover:text-olive-700 text-xs font-bold uppercase tracking-[0.3em] transition-colors flex items-center"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Refazer Diagnóstico Completo
+                  </button>
                 </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-6">
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="bg-white p-8 rounded-[2.5rem] border border-olive-100 flex items-start space-x-5"
-                >
-                  <div className="p-4 bg-olive-50 rounded-2xl text-olive-600">
-                    <CheckCircle2 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-olive-950 text-lg">Guia Completo</h4>
-                    <p className="text-olive-600 font-light leading-snug">Enviamos um PDF detalhado sobre o perfil {result.perfil} para seu e-mail.</p>
-                  </div>
-                </motion.div>
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1 }}
-                  className="bg-white p-8 rounded-[2.5rem] border border-olive-100 flex items-start space-x-5"
-                >
-                  <div className="p-4 bg-olive-50 rounded-2xl text-olive-600">
-                    <Mail className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-olive-950 text-lg">Suporte Direto</h4>
-                    <p className="text-olive-600 font-light leading-snug">Ficou com alguma dúvida? Nossa equipe está pronta para te ajudar no WhatsApp.</p>
-                  </div>
-                </motion.div>
-              </div>
-              
-              <div className="text-center pb-10">
-                <button 
-                  onClick={handleReset}
-                  className="text-olive-400 hover:text-olive-700 text-xs font-bold uppercase tracking-widest transition-colors flex items-center mx-auto"
-                >
-                  <RotateCcw className="w-3 h-3 mr-2" />
-                  Refazer Diagnóstico
-                </button>
-              </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
