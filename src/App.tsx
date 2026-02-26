@@ -336,7 +336,6 @@ export default function App() {
       .catch(err => console.error("Erro no Supabase (background):", err));
   };
 
-  // Safety check for empty questions
   if (loadingDiag) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white p-4">
@@ -348,24 +347,42 @@ export default function App() {
     );
   }
 
-  if (!diagnostico) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-4">
-        <div className="text-center space-y-4">
-          <AlertTriangle className="w-12 h-12 mx-auto text-red-500" />
-          <h2 className="text-2xl font-bold text-olive-950">Nenhum diagnóstico encontrado</h2>
-          <p className="text-olive-600">Por favor, configure um diagnóstico no painel administrativo.</p>
-          <button onClick={() => setStep('admin')} className="px-6 py-2 bg-olive-900 text-white rounded-xl">Ir para Admin</button>
-        </div>
-      </div>
-    );
-  }
-
+  // PRIORIDADE: Se o usuário estiver tentando acessar o admin, mostre o admin independente dos dados
   if (step === 'admin') {
     if (!isAdminAuthenticated) {
       return <Login onLogin={handleAdminLogin} />;
     }
     return <AdminDashboard onBack={handleAdminLogout} />;
+  }
+
+  if (!diagnostico) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white p-4">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="p-4 bg-red-50 rounded-full w-fit mx-auto">
+            <AlertTriangle className="w-12 h-12 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-olive-950">Configuração Necessária</h2>
+            <p className="text-olive-600">O banco de dados está pronto, mas você ainda não criou nenhum modelo de diagnóstico.</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => setStep('admin')} 
+              className="w-full px-6 py-4 bg-olive-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-olive-900/20"
+            >
+              Acessar Painel Administrativo
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="text-olive-400 hover:text-olive-600 text-sm font-bold uppercase tracking-widest"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -225,7 +225,7 @@ export function DiagnosticEditor() {
                           value={p.pergunta}
                           onChange={e => {
                             const newPerguntas = [...(editingDiag.perguntas || [])];
-                            newPerguntas[pIdx].pergunta = e.target.value;
+                            newPerguntas[pIdx] = { ...newPerguntas[pIdx], pergunta: e.target.value };
                             setEditingDiag({...editingDiag, perguntas: newPerguntas});
                           }}
                           className="w-full p-3 bg-white border border-olive-100 rounded-xl focus:ring-2 focus:ring-olive-900 outline-none font-medium"
@@ -248,7 +248,8 @@ export function DiagnosticEditor() {
                         <button 
                           onClick={() => {
                             const newPerguntas = [...(editingDiag.perguntas || [])];
-                            newPerguntas[pIdx].opcoes.push({ texto: 'Nova Opção', pontos: 0 });
+                            const newOpcoes = [...(newPerguntas[pIdx].opcoes || []), { texto: 'Nova Opção', pontos: 0 }];
+                            newPerguntas[pIdx] = { ...newPerguntas[pIdx], opcoes: newOpcoes };
                             setEditingDiag({...editingDiag, perguntas: newPerguntas});
                           }}
                           className="text-[10px] font-bold text-olive-600 hover:underline"
@@ -264,7 +265,9 @@ export function DiagnosticEditor() {
                               value={o.texto}
                               onChange={e => {
                                 const newPerguntas = [...(editingDiag.perguntas || [])];
-                                newPerguntas[pIdx].opcoes[oIdx].texto = e.target.value;
+                                const newOpcoes = [...newPerguntas[pIdx].opcoes];
+                                newOpcoes[oIdx] = { ...newOpcoes[oIdx], texto: e.target.value };
+                                newPerguntas[pIdx] = { ...newPerguntas[pIdx], opcoes: newOpcoes };
                                 setEditingDiag({...editingDiag, perguntas: newPerguntas});
                               }}
                               placeholder="Texto da opção"
@@ -275,7 +278,9 @@ export function DiagnosticEditor() {
                               value={o.pontos}
                               onChange={e => {
                                 const newPerguntas = [...(editingDiag.perguntas || [])];
-                                newPerguntas[pIdx].opcoes[oIdx].pontos = parseInt(e.target.value) || 0;
+                                const newOpcoes = [...newPerguntas[pIdx].opcoes];
+                                newOpcoes[oIdx] = { ...newOpcoes[oIdx], pontos: parseInt(e.target.value) || 0 };
+                                newPerguntas[pIdx] = { ...newPerguntas[pIdx], opcoes: newOpcoes };
                                 setEditingDiag({...editingDiag, perguntas: newPerguntas});
                               }}
                               placeholder="Pts"
@@ -284,7 +289,8 @@ export function DiagnosticEditor() {
                             <button 
                               onClick={() => {
                                 const newPerguntas = [...(editingDiag.perguntas || [])];
-                                newPerguntas[pIdx].opcoes = newPerguntas[pIdx].opcoes.filter((_, i) => i !== oIdx);
+                                const newOpcoes = newPerguntas[pIdx].opcoes.filter((_, i) => i !== oIdx);
+                                newPerguntas[pIdx] = { ...newPerguntas[pIdx], opcoes: newOpcoes };
                                 setEditingDiag({...editingDiag, perguntas: newPerguntas});
                               }}
                               className="p-2 text-olive-300 hover:text-red-500"
@@ -348,7 +354,7 @@ export function DiagnosticEditor() {
                           value={p.perfil}
                           onChange={e => {
                             const newPerfis = [...(editingDiag.perfis || [])];
-                            newPerfis[pIdx].perfil = e.target.value;
+                            newPerfis[pIdx] = { ...newPerfis[pIdx], perfil: e.target.value };
                             setEditingDiag({...editingDiag, perfis: newPerfis});
                           }}
                           className="w-full p-3 bg-white border border-olive-100 rounded-xl outline-none font-bold text-lg"
@@ -362,7 +368,7 @@ export function DiagnosticEditor() {
                             value={p.pontuacaoMin}
                             onChange={e => {
                               const newPerfis = [...(editingDiag.perfis || [])];
-                              newPerfis[pIdx].pontuacaoMin = parseInt(e.target.value) || 0;
+                              newPerfis[pIdx] = { ...newPerfis[pIdx], pontuacaoMin: parseInt(e.target.value) || 0 };
                               setEditingDiag({...editingDiag, perfis: newPerfis});
                             }}
                             className="w-full p-3 bg-white border border-olive-100 rounded-xl text-center"
@@ -373,7 +379,7 @@ export function DiagnosticEditor() {
                             value={p.pontuacaoMax}
                             onChange={e => {
                               const newPerfis = [...(editingDiag.perfis || [])];
-                              newPerfis[pIdx].pontuacaoMax = parseInt(e.target.value) || 0;
+                              newPerfis[pIdx] = { ...newPerfis[pIdx], pontuacaoMax: parseInt(e.target.value) || 0 };
                               setEditingDiag({...editingDiag, perfis: newPerfis});
                             }}
                             className="w-full p-3 bg-white border border-olive-100 rounded-xl text-center"
@@ -388,7 +394,7 @@ export function DiagnosticEditor() {
                           value={p.nivel}
                           onChange={e => {
                             const newPerfis = [...(editingDiag.perfis || [])];
-                            newPerfis[pIdx].nivel = parseInt(e.target.value) || 1;
+                            newPerfis[pIdx] = { ...newPerfis[pIdx], nivel: parseInt(e.target.value) || 1 };
                             setEditingDiag({...editingDiag, perfis: newPerfis});
                           }}
                           className="w-full p-3 bg-white border border-olive-100 rounded-xl text-center"
@@ -403,7 +409,7 @@ export function DiagnosticEditor() {
                           value={p.descricao}
                           onChange={e => {
                             const newPerfis = [...(editingDiag.perfis || [])];
-                            newPerfis[pIdx].descricao = e.target.value;
+                            newPerfis[pIdx] = { ...newPerfis[pIdx], descricao: e.target.value };
                             setEditingDiag({...editingDiag, perfis: newPerfis});
                           }}
                           rows={3}
@@ -417,7 +423,7 @@ export function DiagnosticEditor() {
                           value={p.riscoPrincipal}
                           onChange={e => {
                             const newPerfis = [...(editingDiag.perfis || [])];
-                            newPerfis[pIdx].riscoPrincipal = e.target.value;
+                            newPerfis[pIdx] = { ...newPerfis[pIdx], riscoPrincipal: e.target.value };
                             setEditingDiag({...editingDiag, perfis: newPerfis});
                           }}
                           className="w-full p-3 bg-white border border-olive-100 rounded-xl outline-none"
@@ -430,7 +436,7 @@ export function DiagnosticEditor() {
                           value={p.solucaoRecomendada}
                           onChange={e => {
                             const newPerfis = [...(editingDiag.perfis || [])];
-                            newPerfis[pIdx].solucaoRecomendada = e.target.value;
+                            newPerfis[pIdx] = { ...newPerfis[pIdx], solucaoRecomendada: e.target.value };
                             setEditingDiag({...editingDiag, perfis: newPerfis});
                           }}
                           className="w-full p-3 bg-white border border-olive-100 rounded-xl outline-none"
@@ -445,7 +451,8 @@ export function DiagnosticEditor() {
                           <button 
                             onClick={() => {
                               const newPerfis = [...(editingDiag.perfis || [])];
-                              newPerfis[pIdx].sinais.push('Novo sinal');
+                              const newSinais = [...(newPerfis[pIdx].sinais || []), 'Novo sinal'];
+                              newPerfis[pIdx] = { ...newPerfis[pIdx], sinais: newSinais };
                               setEditingDiag({...editingDiag, perfis: newPerfis});
                             }}
                             className="text-[10px] font-bold text-olive-600 hover:underline"
@@ -461,7 +468,9 @@ export function DiagnosticEditor() {
                                 value={s}
                                 onChange={e => {
                                   const newPerfis = [...(editingDiag.perfis || [])];
-                                  newPerfis[pIdx].sinais[sIdx] = e.target.value;
+                                  const newSinais = [...newPerfis[pIdx].sinais];
+                                  newSinais[sIdx] = e.target.value;
+                                  newPerfis[pIdx] = { ...newPerfis[pIdx], sinais: newSinais };
                                   setEditingDiag({...editingDiag, perfis: newPerfis});
                                 }}
                                 className="flex-1 p-2 bg-white border border-olive-100 rounded-lg text-xs"
@@ -469,7 +478,8 @@ export function DiagnosticEditor() {
                               <button 
                                 onClick={() => {
                                   const newPerfis = [...(editingDiag.perfis || [])];
-                                  newPerfis[pIdx].sinais = newPerfis[pIdx].sinais.filter((_, i) => i !== sIdx);
+                                  const newSinais = newPerfis[pIdx].sinais.filter((_, i) => i !== sIdx);
+                                  newPerfis[pIdx] = { ...newPerfis[pIdx], sinais: newSinais };
                                   setEditingDiag({...editingDiag, perfis: newPerfis});
                                 }}
                                 className="text-olive-300 hover:text-red-500"
@@ -487,7 +497,8 @@ export function DiagnosticEditor() {
                           <button 
                             onClick={() => {
                               const newPerfis = [...(editingDiag.perfis || [])];
-                              newPerfis[pIdx].planoEvolucao.push('Novo passo');
+                              const newPlano = [...(newPerfis[pIdx].planoEvolucao || []), 'Novo passo'];
+                              newPerfis[pIdx] = { ...newPerfis[pIdx], planoEvolucao: newPlano };
                               setEditingDiag({...editingDiag, perfis: newPerfis});
                             }}
                             className="text-[10px] font-bold text-olive-600 hover:underline"
@@ -503,7 +514,9 @@ export function DiagnosticEditor() {
                                 value={step}
                                 onChange={e => {
                                   const newPerfis = [...(editingDiag.perfis || [])];
-                                  newPerfis[pIdx].planoEvolucao[sIdx] = e.target.value;
+                                  const newPlano = [...newPerfis[pIdx].planoEvolucao];
+                                  newPlano[sIdx] = e.target.value;
+                                  newPerfis[pIdx] = { ...newPerfis[pIdx], planoEvolucao: newPlano };
                                   setEditingDiag({...editingDiag, perfis: newPerfis});
                                 }}
                                 className="flex-1 p-2 bg-white border border-olive-100 rounded-lg text-xs"
@@ -511,7 +524,8 @@ export function DiagnosticEditor() {
                               <button 
                                 onClick={() => {
                                   const newPerfis = [...(editingDiag.perfis || [])];
-                                  newPerfis[pIdx].planoEvolucao = newPerfis[pIdx].planoEvolucao.filter((_, i) => i !== sIdx);
+                                  const newPlano = newPerfis[pIdx].planoEvolucao.filter((_, i) => i !== sIdx);
+                                  newPerfis[pIdx] = { ...newPerfis[pIdx], planoEvolucao: newPlano };
                                   setEditingDiag({...editingDiag, perfis: newPerfis});
                                 }}
                                 className="text-olive-300 hover:text-red-500"
