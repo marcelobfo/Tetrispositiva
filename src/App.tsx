@@ -769,7 +769,7 @@ export default function App() {
 
                   <div className="space-y-3">
                     <h2 className={cn(
-                      "text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none",
+                      "text-3xl sm:text-5xl font-black uppercase tracking-tighter leading-none",
                       result.pontuacaoTotal <= 24 ? "text-red-600" :
                       result.pontuacaoTotal <= 52 ? "text-orange-500" :
                       result.pontuacaoTotal <= 78 ? "text-blue-500" : "text-emerald-600"
@@ -796,10 +796,56 @@ export default function App() {
                   </div>
                 </section>
 
-                {/* 2. Card de Texto Final (Conteúdo Persuasivo) */}
+                {/* 2. Detailed Sections (Sinais, Plano, Risco, Solução) */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-8">
+                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
+                      <h4 className="text-sm sm:text-base font-black text-olive-950 uppercase tracking-[0.2em] flex items-center">
+                        <AlertTriangle className="w-5 h-5 mr-3 text-olive-400" /> Sinais Identificados
+                      </h4>
+                      <div className="space-y-3">
+                        {result.sinais.map((sinal, i) => (
+                          <div key={i} className="flex items-start space-x-3 text-sm text-olive-700">
+                            <CheckCircle2 className="w-4 h-4 text-olive-400 mt-0.5 shrink-0" />
+                            <span>{sinal}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 space-y-4">
+                      <h4 className="text-sm sm:text-base font-black text-red-600 uppercase tracking-[0.2em] flex items-center">
+                        <Zap className="w-5 h-5 mr-3 text-red-400" /> Risco Principal
+                      </h4>
+                      <p className="text-red-900 font-medium">{result.riscoPrincipal}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-8">
+                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
+                      <h4 className="text-sm sm:text-base font-black text-olive-950 uppercase tracking-[0.2em] flex items-center">
+                        <TrendingUp className="w-5 h-5 mr-3 text-olive-400" /> Plano de Evolução
+                      </h4>
+                      <div className="space-y-4">
+                        {result.planoEvolucao.map((passo, i) => (
+                          <div key={i} className="flex items-center space-x-3">
+                            <span className="w-6 h-6 rounded-full bg-olive-100 text-olive-600 text-[10px] font-bold flex items-center justify-center shrink-0">{i+1}</span>
+                            <span className="text-sm text-olive-800">{passo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-olive-900 p-10 rounded-[3rem] text-white space-y-4 shadow-2xl">
+                      <h4 className="text-sm sm:text-base font-black text-olive-200 uppercase tracking-[0.2em] flex items-center">
+                        <Target className="w-5 h-5 mr-3 text-olive-400" /> Solução Recomendada
+                      </h4>
+                      <p className="text-xl font-bold">{result.solucaoRecomendada}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Card de Texto Final (Conteúdo Persuasivo) */}
                 <section className="bg-olive-50 p-10 sm:p-14 rounded-[3.5rem] border border-olive-100 space-y-8 shadow-xl shadow-olive-900/5">
                   <div className="space-y-6">
-                    <h3 className="text-2xl sm:text-3xl font-bold text-olive-950 leading-tight">
+                    <h3 className="text-3xl sm:text-4xl font-black text-olive-950 leading-tight tracking-tight">
                       Seu resultado mostra potencial, mas o tempo ainda joga contra você.
                     </h3>
                     <p className="text-olive-700 text-lg font-light leading-relaxed">
@@ -812,52 +858,6 @@ export default function App() {
                     </p>
                   </div>
                 </section>
-
-                {/* Detailed Sections (Sinais, Plano, Risco, Solução) */}
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-8">
-                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
-                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
-                        <AlertTriangle className="w-4 h-4 mr-2" /> Sinais Identificados
-                      </h4>
-                      <div className="space-y-3">
-                        {result.sinais.map((sinal, i) => (
-                          <div key={i} className="flex items-start space-x-3 text-sm text-olive-700">
-                            <CheckCircle2 className="w-4 h-4 text-olive-400 mt-0.5 shrink-0" />
-                            <span>{sinal}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 space-y-4">
-                      <h4 className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] flex items-center">
-                        <Zap className="w-4 h-4 mr-2" /> Risco Principal
-                      </h4>
-                      <p className="text-red-900 font-medium">{result.riscoPrincipal}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-8">
-                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
-                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-2" /> Plano de Evolução
-                      </h4>
-                      <div className="space-y-4">
-                        {result.planoEvolucao.map((passo, i) => (
-                          <div key={i} className="flex items-center space-x-3">
-                            <span className="w-6 h-6 rounded-full bg-olive-100 text-olive-600 text-[10px] font-bold flex items-center justify-center shrink-0">{i+1}</span>
-                            <span className="text-sm text-olive-800">{passo}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="bg-olive-900 p-10 rounded-[3rem] text-white space-y-4 shadow-2xl">
-                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
-                        <Target className="w-4 h-4 mr-2" /> Solução Recomendada
-                      </h4>
-                      <p className="text-xl font-bold">{result.solucaoRecomendada}</p>
-                    </div>
-                  </div>
-                </div>
 
                 {/* 3. Botão de Chamada para Ação (CTA) */}
                 <div className="flex flex-col items-center pt-8">
