@@ -56,10 +56,16 @@ export default function App() {
 
   // State initialization with localStorage recovery
   const [step, setStep] = useState<Step>(() => {
+    const path = window.location.pathname;
+    if (path === '/dashboard') return 'admin';
+    
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.step || 'welcome';
+      // If the user was on a question, keep them there, otherwise start at welcome
+      if (parsed.step === 'questions' || parsed.step === 'lead') {
+        return parsed.step;
+      }
     }
     return 'welcome';
   });
