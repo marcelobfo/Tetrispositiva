@@ -12,16 +12,17 @@ import {
   ArrowRight, 
   BarChart3, 
   ShieldCheck, 
-  TrendingUp, 
-  Zap,
-  Phone,
-  Mail,
-  User,
-  Loader2,
   RotateCcw,
   Clock,
   AlertTriangle,
-  Target
+  Target,
+  ChevronDown,
+  Loader2,
+  TrendingUp,
+  Zap,
+  Phone,
+  Mail,
+  User
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,6 +85,21 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(!!localStorage.getItem('admin_token'));
+  const [showScrollArrow, setShowScrollArrow] = useState(true);
+
+  // Handle scroll to hide arrow
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setShowScrollArrow(false);
+      } else {
+        setShowScrollArrow(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Load diagnostic data
   useEffect(() => {
@@ -245,15 +261,16 @@ export default function App() {
     novasRespostas[currentQuestionIndex] = pontos;
     setRespostas(novasRespostas);
 
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setTimeout(() => {
+    setStep('loading');
+
+    setTimeout(() => {
+      if (currentQuestionIndex < totalQuestions - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
-      }, 300);
-    } else {
-      setTimeout(() => {
+        setStep('questions');
+      } else {
         setStep('lead');
-      }, 300);
-    }
+      }
+    }, 500); // 0.5s as requested
   }, [currentQuestionIndex, respostas, totalQuestions]);
 
   const handleBack = () => {
@@ -265,17 +282,20 @@ export default function App() {
   };
 
   const calculateResult = (total: number): QuizResult => {
+    // Formula: score = Math.round(((pontuacao_total - 18) / 54) * 100)
+    const score = Math.round(((total - 18) / 54) * 100);
+    const clampedScore = Math.max(0, Math.min(100, score));
+
     if (!diagnostico || !diagnostico.perfis) {
-      // Fallback to static logic if something goes wrong
-      const getResultForRange = (t: number) => {
-        if (t <= 31) return { perfil: "OPERADOR", nivel: 1, desc: "Seu foco está na sobrevivência imediata." };
-        if (t <= 46) return { perfil: "TÁTICO", nivel: 2, desc: "Você já possui organização básica." };
-        if (t <= 60) return { perfil: "ESTRATÉGICO", nivel: 3, desc: "Sua gestão é sustentável." };
-        return { perfil: "DECISOR", nivel: 4, desc: "Você atingiu o nível de Lucro Livre." };
+      const getResultForRange = (s: number) => {
+        if (s <= 25) return { perfil: "OPERADOR", nivel: 1, desc: "Caos Financeiro - Seu foco está na sobrevivência imediata." };
+        if (s <= 50) return { perfil: "TÁTICO", nivel: 2, desc: "Negócio em Construção - Você já possui organização básica." };
+        if (s <= 75) return { perfil: "ESTRATÉGICO", nivel: 3, desc: "Estrutura Sustentável - Sua gestão é sustentável." };
+        return { perfil: "DECISOR", nivel: 4, desc: "Lucro Livre - Você atingiu o nível de Lucro Livre." };
       };
-      const base = getResultForRange(total);
+      const base = getResultForRange(clampedScore);
       return {
-        pontuacaoTotal: total,
+        pontuacaoTotal: clampedScore,
         perfil: base.perfil,
         descricao: base.desc,
         nivel: base.nivel,
@@ -286,33 +306,20 @@ export default function App() {
       };
     }
 
-    const perfilEncontrado = diagnostico.perfis.find(p => total >= p.pontuacaoMin && total <= p.pontuacaoMax);
+    const perfilEncontrado = diagnostico.perfis.find(p => clampedScore >= p.pontuacaoMin && clampedScore <= p.pontuacaoMax);
     
     if (!perfilEncontrado) {
-      // If not found, use the closest one
       const sortedPerfis = [...diagnostico.perfis].sort((a, b) => a.pontuacaoMin - b.pontuacaoMin);
-      const fallback = total < sortedPerfis[0].pontuacaoMin ? sortedPerfis[0] : sortedPerfis[sortedPerfis.length - 1];
+      const fallback = clampedScore < sortedPerfis[0].pontuacaoMin ? sortedPerfis[0] : sortedPerfis[sortedPerfis.length - 1];
       return {
-        pontuacaoTotal: total,
-        perfil: fallback.perfil,
-        descricao: fallback.descricao,
-        nivel: fallback.nivel,
-        sinais: fallback.sinais,
-        riscoPrincipal: fallback.riscoPrincipal,
-        planoEvolucao: fallback.planoEvolucao,
-        solucaoRecomendada: fallback.solucaoRecomendada
+        ...fallback,
+        pontuacaoTotal: clampedScore
       };
     }
 
     return {
-      pontuacaoTotal: total,
-      perfil: perfilEncontrado.perfil,
-      descricao: perfilEncontrado.descricao,
-      nivel: perfilEncontrado.nivel,
-      sinais: perfilEncontrado.sinais,
-      riscoPrincipal: perfilEncontrado.riscoPrincipal,
-      planoEvolucao: perfilEncontrado.planoEvolucao,
-      solucaoRecomendada: perfilEncontrado.solucaoRecomendada
+      ...perfilEncontrado,
+      pontuacaoTotal: clampedScore
     };
   };
 
@@ -417,17 +424,16 @@ export default function App() {
           referrerPolicy="no-referrer" 
         />
         {step === 'questions' && (
-          <div className="flex items-center space-x-4">
-            <div className="text-[10px] sm:text-xs font-bold text-olive-600 tracking-widest uppercase bg-olive-50 px-3 py-1 rounded-full">
+          <div className="fixed top-0 left-0 w-full h-1 bg-olive-100 z-[60]">
+            <motion.div 
+              className="bg-olive-600 h-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="absolute top-2 right-4 text-[10px] font-bold text-olive-400 uppercase tracking-widest">
               {currentQuestionIndex + 1} / {totalQuestions}
             </div>
-            <button 
-              onClick={handleReset}
-              className="p-2 text-olive-400 hover:text-olive-600 transition-colors"
-              title="Reiniciar"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
           </div>
         )}
       </header>
@@ -440,113 +446,141 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-10 my-auto"
+              className="text-center space-y-12 my-auto flex flex-col items-center"
             >
-              <div className="space-y-6">
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-olive-50 text-olive-700 text-[10px] font-bold tracking-widest uppercase"
-                >
-                  <Clock className="w-3 h-3" />
-                  <span>Tempo médio: 5-10 minutos</span>
-                </motion.div>
-                
-                <h1 className="text-4xl sm:text-7xl font-bold text-olive-950 leading-[1.1] tracking-tight">
-                  {diagnostico.titulo}
+              <div className="space-y-8">
+                <h1 className="text-4xl sm:text-6xl font-bold text-olive-950 leading-[1.1] tracking-tight max-w-xl mx-auto">
+                  Você está pronto para descobrir como você pode tirar mais lucro da sua empresa?
                 </h1>
-                
-                <p className="text-lg sm:text-xl text-olive-700 max-w-lg mx-auto leading-relaxed font-light">
-                  {diagnostico.descricao}
+              </div>
+
+              <button
+                onClick={() => setStep('concept')}
+                className="group relative inline-flex items-center justify-center px-12 py-6 font-bold text-white transition-all duration-300 bg-olive-600 rounded-full hover:bg-olive-700 hover:shadow-xl hover:shadow-olive-600/20 active:scale-95 focus:outline-none text-xl"
+              >
+                SIM QUERO, ESTOU PRONTO
+                <ArrowRight className="ml-2 w-6 h-6 transition-transform group-hover:translate-x-1" />
+              </button>
+            </motion.div>
+          )}
+
+          {step === 'concept' && (
+            <motion.div
+              key="concept"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-10 my-auto"
+            >
+              <div className="space-y-4 text-center">
+                <h2 className="text-4xl font-bold text-olive-950 tracking-tight">Score Lucro Livre</h2>
+                <p className="text-lg text-olive-700 font-light leading-relaxed">
+                  Índice de 0 a 100 que avalia a capacidade de gerar lucro previsível, caixa saudável e distribuição estratégica.
                 </p>
               </div>
 
-              <div className="flex flex-col items-center space-y-4">
-                <button
-                  onClick={handleStart}
-                  className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-olive-600 rounded-full hover:bg-olive-700 hover:shadow-xl hover:shadow-olive-600/20 active:scale-95 focus:outline-none"
-                >
-                  Começar Diagnóstico
-                  <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </button>
-                
-                {respostas.length > 0 && (
-                  <button 
-                    onClick={() => setStep('questions')}
-                    className="text-sm text-olive-500 hover:text-olive-700 underline underline-offset-4 transition-colors"
-                  >
-                    Continuar de onde parei
-                  </button>
-                )}
+              <div className="grid gap-4">
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
+                  <h3 className="font-bold text-olive-900 flex items-center">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                    Estrutura
+                  </h3>
+                  <p className="text-sm text-olive-600">Clareza de números e DRE.</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
+                  <h3 className="font-bold text-olive-900 flex items-center">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">2</span>
+                    Receita
+                  </h3>
+                  <p className="text-sm text-olive-600">Previsibilidade e Cash Collect.</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
+                  <h3 className="font-bold text-olive-900 flex items-center">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">3</span>
+                    Liberdade
+                  </h3>
+                  <p className="text-sm text-olive-600">Pró-labore e separação de contas.</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
+                  <h3 className="font-bold text-olive-900 flex items-center">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">4</span>
+                    Lucro Livre
+                  </h3>
+                  <p className="text-sm text-olive-600">Reservas (Open Doors), reinvestimento e crescimento.</p>
+                </div>
               </div>
+
+              <button
+                onClick={() => setStep('questions')}
+                className="w-full py-6 bg-olive-950 text-white font-bold text-xl rounded-full hover:bg-black transition-all shadow-xl"
+              >
+                COMEÇAR DIAGNÓSTICO
+              </button>
+            </motion.div>
+          )}
+
+          {step === 'loading' && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center space-y-6 my-auto"
+            >
+              <Loader2 className="w-12 h-12 text-olive-600 animate-spin" />
+              <p className="text-olive-600 font-bold uppercase tracking-[0.3em] text-xs">Analisando resposta...</p>
             </motion.div>
           )}
 
           {step === 'questions' && (
             <motion.div
               key={`q-${currentQuestionIndex}`}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              className="space-y-10 my-auto"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md mx-auto bg-white p-8 sm:p-10 rounded-[2.5rem] border border-olive-100 shadow-xl shadow-olive-900/5 space-y-8 my-auto flex flex-col justify-center"
             >
-              {/* Progress Bar */}
-              <div className="fixed top-0 left-0 w-full h-1.5 bg-olive-50 z-[60]">
-                <motion.div 
-                  className="bg-olive-600 h-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ type: "spring", stiffness: 50, damping: 20 }}
-                />
-              </div>
+              <div className="space-y-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-olive-950 leading-tight tracking-tight text-center">
+                  {diagnostico.perguntas[currentQuestionIndex].pergunta}
+                </h2>
 
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-olive-400 uppercase tracking-widest">Pergunta {currentQuestionIndex + 1}</span>
-                  <h2 className="text-2xl sm:text-4xl font-medium text-olive-950 leading-tight tracking-tight">
-                    {diagnostico.perguntas[currentQuestionIndex].pergunta}
-                  </h2>
-                </div>
-
-                <div className="grid gap-4">
+                <div className="grid gap-3 w-full">
                   {diagnostico.perguntas[currentQuestionIndex].opcoes.map((opcao, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleAnswer(opcao.pontos)}
                       className={cn(
-                        "flex items-center text-left p-6 rounded-2xl border-2 transition-all duration-300 group relative overflow-hidden",
+                        "flex items-center text-left p-5 rounded-2xl border-2 transition-all duration-300 group relative overflow-hidden w-full active:scale-[0.98]",
                         respostas[currentQuestionIndex] === opcao.pontos
                           ? "border-olive-600 bg-olive-50 shadow-md"
                           : "border-olive-100 hover:border-olive-300 bg-white hover:bg-olive-50/30"
                       )}
                     >
                       <div className={cn(
-                        "w-10 h-10 rounded-xl border flex items-center justify-center mr-5 shrink-0 transition-all duration-300 font-bold",
+                        "w-8 h-8 rounded-lg border flex items-center justify-center mr-4 shrink-0 transition-all duration-300 font-bold text-xs",
                         respostas[currentQuestionIndex] === opcao.pontos
-                          ? "bg-olive-600 border-olive-600 text-white scale-110"
+                          ? "bg-olive-600 border-olive-600 text-white"
                           : "border-olive-200 group-hover:border-olive-400 text-olive-400"
                       )}>
                         {String.fromCharCode(65 + idx)}
                       </div>
-                      <span className="text-lg text-olive-800 font-medium leading-tight">{opcao.texto}</span>
+                      <span className="text-sm sm:text-base font-bold text-olive-800 leading-tight">
+                        {opcao.texto}
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-olive-50">
+              <div className="flex justify-center pt-2">
                 <button
                   onClick={handleBack}
-                  className="flex items-center text-olive-400 hover:text-olive-700 font-bold text-sm transition-colors group"
+                  className="flex items-center text-olive-300 hover:text-olive-500 font-bold text-[10px] transition-colors group tracking-[0.2em]"
                 >
-                  <ChevronLeft className="w-5 h-5 mr-1 transition-transform group-hover:-translate-x-1" />
+                  <ChevronLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
                   VOLTAR
                 </button>
-                
-                <div className="text-[10px] font-bold text-olive-300 uppercase tracking-widest">
-                  Selecione uma opção para avançar
-                </div>
               </div>
             </motion.div>
           )}
@@ -637,185 +671,199 @@ export default function App() {
           )}
 
           {step === 'result' && result && (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="w-full max-w-4xl mx-auto space-y-12 pb-20"
-            >
-              {/* Hero Result Section */}
-              <section className="bg-white p-10 sm:p-20 rounded-[4rem] border border-olive-100 shadow-2xl shadow-olive-900/5 text-center space-y-10 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-olive-200 via-olive-600 to-olive-200" />
-                
-                <div className="space-y-8 relative z-10">
-                  <motion.div 
-                    initial={{ scale: 0, rotate: -10 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", damping: 12, delay: 0.2 }}
-                    className="inline-flex items-center justify-center w-28 h-28 bg-olive-600 rounded-[2.5rem] text-white shadow-2xl shadow-olive-600/40 mb-4"
+            <>
+              <AnimatePresence>
+                {showScrollArrow && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
                   >
-                    {result.nivel === 1 && <Zap className="w-14 h-14" />}
-                    {result.nivel === 2 && <BarChart3 className="w-14 h-14" />}
-                    {result.nivel === 3 && <ShieldCheck className="w-14 h-14" />}
-                    {result.nivel === 4 && <TrendingUp className="w-14 h-14" />}
+                    <div className="flex flex-col items-center space-y-2">
+                      <span className="text-[10px] font-bold text-olive-400 uppercase tracking-[0.3em] bg-white/80 backdrop-blur px-3 py-1 rounded-full border border-olive-100 shadow-sm">
+                        Role para ver mais
+                      </span>
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="w-10 h-10 bg-olive-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-olive-600/30"
+                      >
+                        <ChevronDown className="w-6 h-6" />
+                      </motion.div>
+                    </div>
                   </motion.div>
-                  
+                )}
+              </AnimatePresence>
+
+              <motion.div
+                key="result"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full max-w-4xl mx-auto space-y-8 pb-20"
+              >
+                {/* 1. O Score (Topo da Página) */}
+                <section className="bg-white p-8 sm:p-12 rounded-[3.5rem] border border-olive-100 shadow-2xl shadow-olive-900/5 text-center space-y-8 relative overflow-hidden">
+                  <div className="space-y-2 mb-4">
+                    <div className="inline-flex p-3 bg-olive-50 rounded-2xl text-olive-600 mb-2">
+                      <BarChart3 className="w-8 h-8" />
+                    </div>
+                    <p className="text-[10px] font-bold text-olive-400 uppercase tracking-[0.4em]">Diagnóstico Concluído</p>
+                  </div>
+
+                  <div className="relative w-72 h-36 mx-auto overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 100 50">
+                      <path
+                        d="M 10 50 A 40 40 0 0 1 90 50"
+                        fill="none"
+                        stroke="#f4f5f0"
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                      />
+                      <motion.path
+                        d="M 10 50 A 40 40 0 0 1 90 50"
+                        fill="none"
+                        stroke={
+                          result.pontuacaoTotal <= 25 ? "#ef4444" :
+                          result.pontuacaoTotal <= 50 ? "#f97316" :
+                          result.pontuacaoTotal <= 75 ? "#3b82f6" : "#10b981"
+                        }
+                        strokeWidth="10"
+                        strokeLinecap="round"
+                        strokeDasharray="125.6"
+                        initial={{ strokeDashoffset: 125.6 }}
+                        animate={{ strokeDashoffset: 125.6 - (125.6 * (result.pontuacaoTotal / 100)) }}
+                        transition={{ duration: 2.5, ease: "circOut" }}
+                      />
+                    </svg>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                      <motion.span 
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 1.2 }}
+                        className="text-6xl font-black text-olive-950"
+                      >
+                        {result.pontuacaoTotal}
+                      </motion.span>
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
-                    <p className="text-sm font-bold text-olive-500 uppercase tracking-[0.5em]">Diagnóstico Concluído</p>
-                    <h2 className="text-6xl sm:text-8xl font-bold text-olive-950 tracking-tighter leading-none">
-                      Perfil <span className="text-olive-600">{result.perfil}</span>
+                    <h2 className={cn(
+                      "text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none",
+                      result.pontuacaoTotal <= 25 ? "text-red-600" :
+                      result.pontuacaoTotal <= 50 ? "text-orange-500" :
+                      result.pontuacaoTotal <= 75 ? "text-blue-500" : "text-emerald-600"
+                    )}>
+                      {result.pontuacaoTotal <= 25 && "CAOS FINANCEIRO - OPERADOR"}
+                      {result.pontuacaoTotal > 25 && result.pontuacaoTotal <= 50 && "NEGÓCIO EM CONSTRUÇÃO - TÁTICO"}
+                      {result.pontuacaoTotal > 50 && result.pontuacaoTotal <= 75 && "ESTRUTURA SUSTENTÁVEL - ESTRATÉGICO"}
+                      {result.pontuacaoTotal > 75 && "LUCRO LIVRE - DECISOR"}
                     </h2>
-                  </div>
-                  
-                  <p className="text-2xl text-olive-700 leading-relaxed max-w-2xl mx-auto font-light">
-                    {result.descricao}
-                  </p>
-                </div>
-
-                {/* Level Progress */}
-                <div className="space-y-6 max-w-xl mx-auto pt-4">
-                  <div className="flex justify-between items-end">
-                    <div className="text-left">
-                      <p className="text-[10px] font-bold text-olive-400 uppercase tracking-widest mb-1">Status Atual</p>
-                      <p className="text-lg font-bold text-olive-900">Maturidade Nível {result.nivel}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-olive-400 uppercase tracking-widest mb-1">Pontuação</p>
-                      <p className="text-lg font-bold text-olive-600">{result.pontuacaoTotal} <span className="text-sm text-olive-300">/ 72</span></p>
-                    </div>
-                  </div>
-                  <div className="h-4 bg-olive-50 rounded-full overflow-hidden p-1 border border-olive-100 shadow-inner">
-                    <motion.div 
-                      className="bg-olive-600 h-full rounded-full shadow-lg"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(result.pontuacaoTotal / 72) * 100}%` }}
-                      transition={{ duration: 2, ease: "circOut" }}
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 gap-4 text-[10px] font-bold text-olive-300 uppercase tracking-widest">
-                    <div className={cn("transition-colors duration-500", result.nivel >= 1 ? "text-olive-600" : "")}>Operador</div>
-                    <div className={cn("transition-colors duration-500", result.nivel >= 2 ? "text-olive-600" : "")}>Tático</div>
-                    <div className={cn("transition-colors duration-500", result.nivel >= 3 ? "text-olive-600" : "")}>Estratégico</div>
-                    <div className={cn("transition-colors duration-500", result.nivel >= 4 ? "text-olive-600" : "")}>Decisor</div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Detailed Insights Section */}
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Sinais e Riscos */}
-                <div className="space-y-8">
-                  <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-xl shadow-olive-900/5 space-y-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-olive-50 rounded-lg text-olive-600">
-                        <AlertTriangle className="w-5 h-5" />
-                      </div>
-                      <h3 className="text-lg font-bold text-olive-900 uppercase tracking-wider">⚠️ Sinais Identificados</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {result.sinais.map((sinal, i) => (
-                        <motion.div 
-                          key={i}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.4 + (i * 0.1) }}
-                          className="flex items-start space-x-3 bg-olive-50/30 p-4 rounded-2xl border border-olive-100/50"
-                        >
-                          <CheckCircle2 className="w-5 h-5 text-olive-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-olive-800 font-medium leading-tight">{sinal}</span>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 shadow-xl shadow-red-900/5 space-y-4">
-                    <div className="flex items-center space-x-3 text-red-600">
-                      <div className="p-2 bg-white rounded-lg shadow-sm">
-                        <Zap className="w-5 h-5" />
-                      </div>
-                      <h3 className="text-lg font-bold uppercase tracking-wider">🚨 Risco Principal</h3>
-                    </div>
-                    <p className="text-lg text-red-900 font-medium leading-relaxed">
-                      {result.riscoPrincipal}
+                    <p className="text-lg text-olive-700 font-light leading-relaxed max-w-md mx-auto">
+                      {result.descricao}
                     </p>
                   </div>
-                </div>
 
-                {/* Plano e Solução */}
-                <div className="space-y-8">
-                  <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-xl shadow-olive-900/5 space-y-6">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-olive-50 rounded-lg text-olive-600">
-                        <TrendingUp className="w-5 h-5" />
-                      </div>
-                      <h3 className="text-lg font-bold text-olive-900 uppercase tracking-wider">✅ Plano de Evolução</h3>
+                  <div className="pt-6 border-t border-olive-50 flex justify-between items-center max-w-xs mx-auto">
+                    <div className="text-left">
+                      <p className="text-[8px] font-bold text-olive-300 uppercase tracking-widest">Status Atual</p>
+                      <p className="text-sm font-bold text-olive-900">Maturidade Nível {result.nivel}</p>
                     </div>
-                    <div className="space-y-3">
-                      {result.planoEvolucao.map((passo, i) => (
-                        <motion.div 
-                          key={i}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + (i * 0.1) }}
-                          className="flex items-center space-x-4 bg-white p-4 rounded-2xl border border-olive-50 shadow-sm hover:border-olive-200 transition-colors"
-                        >
-                          <span className="w-8 h-8 rounded-full bg-olive-100 text-olive-600 text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                          <span className="text-sm text-olive-900 font-medium leading-tight">{passo}</span>
-                        </motion.div>
-                      ))}
+                    <div className="text-right">
+                      <p className="text-[8px] font-bold text-olive-300 uppercase tracking-widest">Pontuação</p>
+                      <p className="text-sm font-bold text-olive-600">{result.pontuacaoTotal} <span className="text-[10px] text-olive-300">/ 100</span></p>
                     </div>
                   </div>
+                </section>
 
-                  <div className="bg-olive-900 p-10 rounded-[3rem] text-white space-y-6 shadow-2xl shadow-olive-900/30 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-                    <div className="flex items-center space-x-3 text-olive-300">
-                      <div className="p-2 bg-white/10 rounded-lg">
-                        <Target className="w-5 h-5" />
+                {/* 2. Card de Texto Final (Conteúdo Persuasivo) */}
+                <section className="bg-olive-50 p-10 sm:p-14 rounded-[3.5rem] border border-olive-100 space-y-8 shadow-xl shadow-olive-900/5">
+                  <div className="space-y-6">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-olive-950 leading-tight">
+                      Seu resultado mostra potencial, mas o tempo ainda joga contra você.
+                    </h3>
+                    <p className="text-olive-700 text-lg font-light leading-relaxed">
+                      Seu score é só o começo. O próximo passo é um Raio-X Financeiro personalizado feito por especialistas para analisar, com profundidade técnica, sua estrutura, caixa, margens e capacidade real de gerar Lucro Livre com constância.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-olive-200/50">
+                    <p className="text-sm font-bold text-olive-500 uppercase tracking-[0.3em]">
+                      Preparado para o próximo nível?
+                    </p>
+                  </div>
+                </section>
+
+                {/* Detailed Sections (Sinais, Plano, Risco, Solução) */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-8">
+                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
+                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
+                        <AlertTriangle className="w-4 h-4 mr-2" /> Sinais Identificados
+                      </h4>
+                      <div className="space-y-3">
+                        {result.sinais.map((sinal, i) => (
+                          <div key={i} className="flex items-start space-x-3 text-sm text-olive-700">
+                            <CheckCircle2 className="w-4 h-4 text-olive-400 mt-0.5 shrink-0" />
+                            <span>{sinal}</span>
+                          </div>
+                        ))}
                       </div>
-                      <h3 className="text-lg font-bold uppercase tracking-wider">🎯 Solução Recomendada</h3>
                     </div>
-                    <div className="space-y-4">
-                      <p className="text-3xl font-bold tracking-tight leading-tight">
-                        {result.solucaoRecomendada}
-                      </p>
-                      <div className="h-1 w-12 bg-olive-500 rounded-full" />
+                    <div className="bg-red-50 p-10 rounded-[3rem] border border-red-100 space-y-4">
+                      <h4 className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] flex items-center">
+                        <Zap className="w-4 h-4 mr-2" /> Risco Principal
+                      </h4>
+                      <p className="text-red-900 font-medium">{result.riscoPrincipal}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-8">
+                    <div className="bg-white p-10 rounded-[3rem] border border-olive-100 shadow-lg space-y-6">
+                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
+                        <TrendingUp className="w-4 h-4 mr-2" /> Plano de Evolução
+                      </h4>
+                      <div className="space-y-4">
+                        {result.planoEvolucao.map((passo, i) => (
+                          <div key={i} className="flex items-center space-x-3">
+                            <span className="w-6 h-6 rounded-full bg-olive-100 text-olive-600 text-[10px] font-bold flex items-center justify-center shrink-0">{i+1}</span>
+                            <span className="text-sm text-olive-800">{passo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-olive-900 p-10 rounded-[3rem] text-white space-y-4 shadow-2xl">
+                      <h4 className="text-xs font-bold text-olive-400 uppercase tracking-[0.3em] flex items-center">
+                        <Target className="w-4 h-4 mr-2" /> Solução Recomendada
+                      </h4>
+                      <p className="text-xl font-bold">{result.solucaoRecomendada}</p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Call to Action Section */}
-              <section className="bg-white p-10 sm:p-16 rounded-[4rem] border border-olive-100 shadow-2xl shadow-olive-900/5 text-center space-y-8">
-                <div className="space-y-4">
-                  <h3 className="text-3xl font-bold text-olive-950">Pronto para o próximo nível?</h3>
-                  <p className="text-olive-600 max-w-xl mx-auto text-lg font-light">
-                    Agende uma conversa estratégica gratuita para entendermos como aplicar esse plano de evolução no seu negócio hoje.
-                  </p>
-                </div>
-                
-                <div className="flex flex-col items-center space-y-6">
+                {/* 3. Botão de Chamada para Ação (CTA) */}
+                <div className="flex flex-col items-center pt-8">
                   <a 
                     href="https://wa.me/553197396474" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-12 py-6 bg-olive-950 text-white font-bold text-xl rounded-2xl hover:bg-black transition-all group shadow-2xl active:scale-[0.98]"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-12 py-7 bg-olive-950 text-white font-bold text-xl rounded-3xl hover:bg-black transition-all group shadow-2xl active:scale-[0.98] border-b-4 border-black"
                   >
-                    Falar com Especialista no WhatsApp
+                    Descobrir Meu Score / Agendar Raio-X
                     <ArrowRight className="ml-3 w-6 h-6 transition-transform group-hover:translate-x-2" />
                   </a>
                   
                   <button 
                     onClick={handleReset}
-                    className="text-olive-400 hover:text-olive-700 text-xs font-bold uppercase tracking-[0.3em] transition-colors flex items-center"
+                    className="mt-10 text-olive-300 hover:text-olive-600 text-[10px] font-bold uppercase tracking-[0.4em] transition-colors flex items-center"
                   >
                     <RotateCcw className="w-3 h-3 mr-2" />
-                    Refazer Diagnóstico Completo
+                    Refazer Diagnóstico
                   </button>
                 </div>
-              </section>
-            </motion.div>
+              </motion.div>
+            </>
           )}
-        </AnimatePresence>
+      </AnimatePresence>
       </main>
 
       {/* Footer */}

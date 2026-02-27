@@ -23,6 +23,19 @@
     @apply bg-olive-50 text-olive-950 font-sans antialiased;
   }
   
+  /* Ajuste de zoom para telas grandes (Notebook e Wide) */
+  @media (min-width: 1024px) {
+    #root {
+      zoom: 0.85;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    #root {
+      zoom: 0.8;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
