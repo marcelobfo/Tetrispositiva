@@ -294,10 +294,10 @@ export default function App() {
 
     if (!diagnostico || !diagnostico.perfis) {
       const getResultForRange = (s: number) => {
-        if (s <= 25) return { perfil: "OPERADOR", nivel: 1, desc: "Caos Financeiro - Seu foco está na sobrevivência imediata." };
-        if (s <= 50) return { perfil: "TÁTICO", nivel: 2, desc: "Negócio em Construção - Você já possui organização básica." };
-        if (s <= 75) return { perfil: "ESTRATÉGICO", nivel: 3, desc: "Estrutura Sustentável - Sua gestão é sustentável." };
-        return { perfil: "DECISOR", nivel: 4, desc: "Lucro Livre - Você atingiu o nível de Lucro Livre." };
+        if (s <= 24) return { perfil: "CAOS FINANCEIRO", nivel: 1, desc: "Você está no modo sobrevivência total." };
+        if (s <= 52) return { perfil: "NEGÓCIO EM CONSTRUÇÃO", nivel: 2, desc: "Organização iniciada, mas falta visão estratégica." };
+        if (s <= 78) return { perfil: "ESTRUTURA SUSTENTÁVEL", nivel: 3, desc: "Gestão eficiente e lucro previsível." };
+        return { perfil: "LUCRO LIVRE", nivel: 4, desc: "Domínio total e liberdade financeira atingida." };
       };
       const base = getResultForRange(clampedScore);
       return {
@@ -743,9 +743,9 @@ export default function App() {
                         d="M 10 50 A 40 40 0 0 1 90 50"
                         fill="none"
                         stroke={
-                          result.pontuacaoTotal <= 25 ? "#ef4444" :
-                          result.pontuacaoTotal <= 50 ? "#f97316" :
-                          result.pontuacaoTotal <= 75 ? "#3b82f6" : "#10b981"
+                          result.pontuacaoTotal <= 24 ? "#ef4444" :
+                          result.pontuacaoTotal <= 52 ? "#f97316" :
+                          result.pontuacaoTotal <= 78 ? "#3b82f6" : "#10b981"
                         }
                         strokeWidth="10"
                         strokeLinecap="round"
@@ -770,14 +770,14 @@ export default function App() {
                   <div className="space-y-3">
                     <h2 className={cn(
                       "text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none",
-                      result.pontuacaoTotal <= 25 ? "text-red-600" :
-                      result.pontuacaoTotal <= 50 ? "text-orange-500" :
-                      result.pontuacaoTotal <= 75 ? "text-blue-500" : "text-emerald-600"
+                      result.pontuacaoTotal <= 24 ? "text-red-600" :
+                      result.pontuacaoTotal <= 52 ? "text-orange-500" :
+                      result.pontuacaoTotal <= 78 ? "text-blue-500" : "text-emerald-600"
                     )}>
-                      {result.pontuacaoTotal <= 25 && "CAOS FINANCEIRO"}
-                      {result.pontuacaoTotal > 25 && result.pontuacaoTotal <= 50 && "NEGÓCIO EM CONSTRUÇÃO"}
-                      {result.pontuacaoTotal > 50 && result.pontuacaoTotal <= 75 && "ESTRUTURA SUSTENTÁVEL"}
-                      {result.pontuacaoTotal > 75 && "LUCRO LIVRE"}
+                      {result.pontuacaoTotal <= 24 && "CAOS FINANCEIRO"}
+                      {result.pontuacaoTotal > 24 && result.pontuacaoTotal <= 52 && "NEGÓCIO EM CONSTRUÇÃO"}
+                      {result.pontuacaoTotal > 52 && result.pontuacaoTotal <= 78 && "ESTRUTURA SUSTENTÁVEL"}
+                      {result.pontuacaoTotal > 78 && "LUCRO LIVRE"}
                     </h2>
                     <p className="text-lg text-olive-700 font-light leading-relaxed max-w-md mx-auto">
                       {result.descricao}
@@ -867,7 +867,7 @@ export default function App() {
                     rel="noopener noreferrer"
                     className="w-full sm:w-auto inline-flex items-center justify-center px-12 py-7 bg-olive-950 text-white font-bold text-xl rounded-3xl hover:bg-black transition-all group shadow-2xl active:scale-[0.98] border-b-4 border-black"
                   >
-                    Descobrir Meu Score / Agendar Raio-X
+                    Falar com um Especialista no WhatsApp
                     <ArrowRight className="ml-3 w-6 h-6 transition-transform group-hover:translate-x-2" />
                   </a>
                   
