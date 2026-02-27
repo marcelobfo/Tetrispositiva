@@ -458,7 +458,7 @@ export default function App() {
                 <h1 className="text-4xl sm:text-6xl font-black text-olive-950 leading-tight tracking-tighter">
                   Score Lucro Livre
                 </h1>
-                <h2 className="text-xl sm:text-2xl font-bold text-olive-600 max-w-lg mx-auto leading-tight">
+                <h2 className="text-2xl sm:text-4xl font-bold text-olive-600 max-w-2xl mx-auto leading-tight">
                   Sua empresa realmente gera lucro ou está apenas faturando?
                 </h2>
                 <p className="text-olive-700 text-lg font-light leading-relaxed max-w-xl mx-auto">
