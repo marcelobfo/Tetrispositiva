@@ -6,76 +6,76 @@ export interface PerfilInfo {
 }
 
 export const PERFIL_DATA: Record<string, PerfilInfo> = {
-  "OPERADOR": {
+  "CAOS FINANCEIRO": {
     sinais: [
-      "Finanças pessoais e empresariais ainda se misturam",
-      "Sem previsão de caixa — as surpresas são frequentes",
-      "Decisões financeiras baseadas em intuição, não em dados",
-      "A empresa depende de você para tudo que envolve dinheiro",
-      "Não sabe exatamente quais produtos/serviços dão mais lucro"
+      "Mistura contas pessoais com empresariais",
+      "Não possui reserva financeira",
+      "Não existe controle de fluxo de caixa",
+      "Falta clareza sobre lucro ou prejuízo",
+      "Decisões tomadas pelo saldo bancário"
     ],
-    riscoPrincipal: "Falta de controle financeiro que pode gerar prejuízo sem perceber e travar o crescimento da empresa.",
+    riscoPrincipal: "Quebra de caixa iminente.",
     planoEvolucao: [
-      "Separar imediatamente as finanças pessoais e empresariais",
-      "Implantar um controle básico de contas a pagar e a receber",
-      "Ter um fluxo de caixa mínimo atualizado semanalmente",
-      "Definir processos claros de registro financeiro",
-      "Contratar suporte especializado (BPO ou implantação de processos)"
+      "Separar contas pessoais e empresariais",
+      "Listar todos os custos fixos e variáveis",
+      "Implantar controle de fluxo de caixa",
+      "Definir pró-labore",
+      "Criar reserva mínima de segurança"
     ],
-    solucaoRecomendada: "Implantação de Processos Financeiros + BPO Financeiro"
+    solucaoRecomendada: "BPO Financeiro Imediato"
   },
-  "TÁTICO": {
+  "NEGÓCIO EM CONSTRUÇÃO": {
     sinais: [
-      "Acompanha o faturamento, mas a margem real ainda é nebulosa",
-      "Tem algum controle, mas as previsões de caixa são imprecisas",
-      "Toma decisões com dados parciais — falta informação estruturada",
-      "O financeiro ainda depende de você para funcionar bem",
-      "Planeja o mês, mas não o trimestre ou o ano"
+      "Controles financeiros básicos",
+      "Análise financeira esporádica",
+      "Dependência do dono nas decisões",
+      "Precificação sem base estratégica",
+      "Crescimento sem previsibilidade"
     ],
-    riscoPrincipal: "Crescer faturamento sem crescer lucro (crescimento desorganizado).",
+    riscoPrincipal: "Crescer sem lucro.",
     planoEvolucao: [
-      "Implantar projeção de caixa para 60–90 dias",
-      "Calcular o ponto de equilíbrio e monitorar mensalmente",
-      "Implantar análise de margem por produto/serviço",
-      "Estruturar o financeiro para funcionar sem depender de você",
-      "Criar um budget anual com revisão trimestral"
+      "Implantar rotina semanal de análise financeira",
+      "Estruturar DRE gerencial",
+      "Criar orçamento anual",
+      "Definir metas de margem de lucro",
+      "Organizar retirada de pró-labore"
     ],
-    solucaoRecomendada: "BPO Financeiro ou Gestão Financeira Empresarial (GFE)"
+    solucaoRecomendada: "BPO Financeiro e Planejamento Financeiro"
   },
-  "ESTRATÉGICO": {
+  "ESTRUTURA SUSTENTÁVEL": {
     sinais: [
-      "Tem controle real do caixa e previsibilidade financeira",
-      "Toma decisões com base em dados e análises",
-      "O financeiro já está em boa parte estruturado",
-      "Entende margem, custos e rentabilidade por linha",
-      "Falta dar o próximo passo: planejamento estratégico financeiro"
+      "Controle financeiro organizado",
+      "Indicadores claros para tomada de decisão",
+      "Previsibilidade de caixa",
+      "Separação total entre PF e PJ",
+      "Precificação com base em margem"
     ],
-    riscoPrincipal: "Ficar operacional demais e não usar o financeiro como motor de crescimento.",
+    riscoPrincipal: "Estagnar por falta de estratégia de crescimento.",
     planoEvolucao: [
-      "Implementar modelagem financeira (cenários e simulações)",
-      "Criar estrutura formal de indicadores (KPIs financeiros mensais)",
-      "Separar financeiro operacional de financeiro estratégico",
-      "Conectar finanças à estratégia de crescimento do negócio",
-      "Considerar CFO externo ou gestão financeira avançada"
+      "Otimizar margens de lucro",
+      "Analisar ROI dos investimentos",
+      "Criar planejamento de expansão",
+      "Definir metas financeiras de longo prazo",
+      "Estruturar reserva para crescimento"
     ],
-    solucaoRecomendada: "Gestão Financeira Empresarial (GFE) — nível estratégico"
+    solucaoRecomendada: "Gestão Financeira Estratégica"
   },
-  "DECISOR": {
+  "LUCRO LIVRE": {
     sinais: [
-      "Tem visão clara de passado, presente e futuro financeiro da empresa",
-      "Usa o financeiro como ferramenta de alavancagem e crescimento",
-      "Processos financeiros funcionam sem depender de você",
-      "Decisões de investimento baseadas em ROI e análise de risco",
-      "Consegue planejar e executar crescimento sustentável"
+      "Empresa independente do dono",
+      "Caixa previsível e saudável",
+      "Decisões baseadas em indicadores",
+      "Distribuição de lucros recorrente",
+      "Visão de longo prazo"
     ],
-    riscoPrincipal: "Estrutura atual não acompanhar a velocidade do crescimento.",
+    riscoPrincipal: "Perder oportunidades de alavancagem por falta de estrutura de capital.",
     planoEvolucao: [
-      "Revisar se os processos atuais escalam com o crescimento planejado",
-      "Avaliar se a equipe financeira atual suporta o próximo nível",
-      "Implementar indicadores preditivos (não apenas históricos)",
-      "Conectar financeiro com gestão de talentos e operações",
-      "Considerar conselho consultivo ou governança corporativa"
+      "Estruturar governança financeira",
+      "Realizar valuation da empresa",
+      "Planejar expansão ou novas unidades",
+      "Criar estratégia de investimentos",
+      "Otimizar estrutura de capital"
     ],
-    solucaoRecomendada: "Consultoria Estratégica / CFO as a Service"
+    solucaoRecomendada: "Consultoria Estratégica Financeira / CFO as a Service"
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, MouseEvent } from 'react';
 import { 
   Users, 
   LayoutDashboard, 
@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Target,
-  Settings
+  Settings,
+  Trash2
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -52,8 +53,8 @@ interface Lead {
   respostas: number[];
 }
 
-const PERFIS = ["OPERADOR", "TÁTICO", "ESTRATÉGICO", "DECISOR"];
-const COLORS = ['#A3A375', '#7A7A52', '#525237', '#29291C']; // Olive shades
+const PERFIS = ["CAOS FINANCEIRO", "NEGÓCIO EM CONSTRUÇÃO", "ESTRUTURA SUSTENTÁVEL", "LUCRO LIVRE"];
+const COLORS = ['#ef4444', '#f97316', '#3b82f6', '#10b981']; // Matching profile colors
 
 export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -61,8 +62,9 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [view, setView] = useState<'kanban' | 'analytics' | 'diagnostics'>('kanban');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchLeads = () => {
     fetch('/api/leads')
       .then(res => res.json())
       .then(data => {
@@ -73,7 +75,32 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
         console.error(err);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchLeads();
   }, []);
+
+  const handleDeleteLead = async (e: MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm('Tem certeza que deseja excluir este lead?')) return;
+    
+    setIsDeleting(id);
+    try {
+      const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setLeads(prev => prev.filter(l => l.id !== id));
+        if (selectedLead?.id === id) setSelectedLead(null);
+      } else {
+        alert('Erro ao excluir lead');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao excluir lead');
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const filteredLeads = useMemo(() => {
     return leads.filter(l => 
@@ -89,7 +116,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
     }));
     
     const avgScore = leads.length > 0 
-      ? Math.round(leads.reduce((acc, l) => acc + l.pontuacao_total, 0) / leads.length)
+      ? Math.round(leads.reduce((acc, l) => acc + Number(l.pontuacao_total || 0), 0) / leads.length)
       : 0;
 
     return { counts, avgScore, total: leads.length };
@@ -212,7 +239,16 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                         <div className="space-y-3">
                           <div className="flex justify-between items-start">
                             <h4 className="font-bold text-olive-900 group-hover:text-olive-600 transition-colors">{lead.nome}</h4>
-                            <span className="text-[10px] font-bold text-olive-400">{lead.pontuacao_total} pts</span>
+                            <div className="flex flex-col items-end space-y-2">
+                              <span className="text-[10px] font-bold text-olive-400">{lead.pontuacao_total} pts</span>
+                              <button
+                                onClick={(e) => handleDeleteLead(e, lead.id)}
+                                disabled={isDeleting === lead.id}
+                                className="p-1.5 text-olive-200 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <div className="flex items-center text-xs text-olive-500">
                             <Mail className="w-3 h-3 mr-2" />
@@ -263,7 +299,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                   </div>
                   <div className="flex items-end space-x-2">
                     <span className="text-4xl font-bold text-olive-950">{stats.avgScore}</span>
-                    <span className="text-olive-500 text-sm mb-1 font-medium">/ 72 pontos</span>
+                    <span className="text-olive-500 text-sm mb-1 font-medium">/ 100 pontos</span>
                   </div>
                 </div>
                 <div className="bg-white p-8 rounded-3xl border border-olive-100 shadow-sm">
@@ -375,12 +411,22 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                     <h2 className="text-2xl sm:text-3xl font-bold text-olive-950">{selectedLead.nome}</h2>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedLead(null)}
-                  className="p-3 hover:bg-olive-50 rounded-full transition-colors group"
-                >
-                  <X className="w-6 h-6 text-olive-400 group-hover:text-olive-900 transition-colors" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => handleDeleteLead(e, selectedLead.id)}
+                    disabled={isDeleting === selectedLead.id}
+                    className="p-3 text-red-400 hover:bg-red-50 rounded-full transition-colors group"
+                    title="Excluir Lead"
+                  >
+                    <Trash2 className="w-6 h-6 group-hover:text-red-600 transition-colors" />
+                  </button>
+                  <button 
+                    onClick={() => setSelectedLead(null)}
+                    className="p-3 hover:bg-olive-50 rounded-full transition-colors group"
+                  >
+                    <X className="w-6 h-6 text-olive-400 group-hover:text-olive-900 transition-colors" />
+                  </button>
+                </div>
               </div>
 
               {/* Modal Content - Scrollable */}
@@ -395,7 +441,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                     <p className="text-[10px] font-bold text-olive-400 uppercase tracking-widest">Pontuação Total</p>
                     <div className="flex items-baseline space-x-1">
                       <p className="text-2xl font-bold text-olive-900">{selectedLead.pontuacao_total}</p>
-                      <p className="text-sm text-olive-300 font-bold">/ 72</p>
+                      <p className="text-sm text-olive-300 font-bold">/ 100</p>
                     </div>
                   </div>
                   <div className="bg-white p-8 rounded-3xl border border-olive-100 shadow-sm space-y-1">
@@ -414,7 +460,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                         ))}
                       </div>
                       <span className="text-xs font-bold text-olive-600 ml-2">
-                        {selectedLead.pontuacao_total <= 31 ? 'Operador' : selectedLead.pontuacao_total <= 46 ? 'Tático' : selectedLead.pontuacao_total <= 60 ? 'Estratégico' : 'Decisor'}
+                        {selectedLead.pontuacao_total <= 24 ? 'Caos Financeiro' : selectedLead.pontuacao_total <= 52 ? 'Negócio em Construção' : selectedLead.pontuacao_total <= 78 ? 'Estrutura Sustentável' : 'Lucro Livre'}
                       </span>
                     </div>
                   </div>
