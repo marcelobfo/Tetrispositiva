@@ -174,13 +174,19 @@ async function startServer() {
     }
   });
 
-  app.delete("/api/leads/:id", async (req, res) => {
+  app.delete(["/api/leads/:id", "/api/leads/:id/"], async (req, res) => {
     try {
       const { id } = req.params;
+      console.log(`Attempting to delete lead with ID: ${id}`);
       const { error } = await supabase.from('leads_diagnostico').delete().eq('id', id);
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase delete error:", error);
+        throw error;
+      }
+      console.log(`Lead ${id} deleted successfully`);
       res.json({ success: true });
     } catch (err: any) {
+      console.error("Delete lead error:", err);
       res.status(500).json({ error: err.message });
     }
   });
