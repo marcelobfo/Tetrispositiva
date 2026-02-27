@@ -446,19 +446,25 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center space-y-12 my-auto flex flex-col items-center"
+              className="text-center space-y-10 my-auto flex flex-col items-center"
             >
-              <div className="space-y-8">
-                <h1 className="text-4xl sm:text-6xl font-bold text-olive-950 leading-[1.1] tracking-tight max-w-xl mx-auto">
-                  Você está pronto para descobrir como você pode tirar mais lucro da sua empresa?
+              <div className="space-y-6">
+                <h1 className="text-4xl sm:text-6xl font-black text-olive-950 leading-tight tracking-tighter">
+                  Score Lucro Livre
                 </h1>
+                <h2 className="text-xl sm:text-2xl font-bold text-olive-600 max-w-lg mx-auto leading-tight">
+                  Sua empresa realmente gera lucro ou está apenas faturando?
+                </h2>
+                <p className="text-olive-700 text-lg font-light leading-relaxed max-w-xl mx-auto">
+                  O Score Lucro Livre é o índice que avalia, de 0 a 100, a capacidade do seu negócio de gerar lucro com previsibilidade, manter caixa saudável e permitir distribuição para os sócios com estratégia.
+                </p>
               </div>
 
               <button
                 onClick={() => setStep('concept')}
-                className="group relative inline-flex items-center justify-center px-12 py-6 font-bold text-white transition-all duration-300 bg-olive-600 rounded-full hover:bg-olive-700 hover:shadow-xl hover:shadow-olive-600/20 active:scale-95 focus:outline-none text-xl"
+                className="group relative inline-flex items-center justify-center px-12 py-6 font-bold text-white transition-all duration-300 bg-olive-950 rounded-2xl hover:bg-black hover:shadow-2xl active:scale-95 focus:outline-none text-xl uppercase tracking-widest"
               >
-                SIM QUERO, ESTOU PRONTO
+                DESCOBRIR MEU SCORE
                 <ArrowRight className="ml-2 w-6 h-6 transition-transform group-hover:translate-x-1" />
               </button>
             </motion.div>
@@ -470,49 +476,56 @@ export default function App() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="space-y-10 my-auto"
+              className="space-y-8 my-auto"
             >
               <div className="space-y-4 text-center">
-                <h2 className="text-4xl font-bold text-olive-950 tracking-tight">Score Lucro Livre</h2>
-                <p className="text-lg text-olive-700 font-light leading-relaxed">
-                  Índice de 0 a 100 que avalia a capacidade de gerar lucro previsível, caixa saudável e distribuição estratégica.
+                <h2 className="text-3xl font-bold text-olive-950 tracking-tight">Como Funciona o Score Lucro Livre</h2>
+                <p className="text-olive-700 font-light leading-relaxed">
+                  O diagnóstico avalia os principais fundamentos que determinam se sua empresa está estruturada para gerar Lucro Livre com previsibilidade, distribuídos nas 4 alavancas do Método Tetris Positiva:
                 </p>
               </div>
 
               <div className="grid gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
-                  <h3 className="font-bold text-olive-900 flex items-center">
-                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">1</span>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-1">
+                  <h3 className="font-bold text-olive-900 flex items-center text-lg">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2 shrink-0">1</span>
                     Estrutura
                   </h3>
-                  <p className="text-sm text-olive-600">Clareza de números e DRE.</p>
+                  <p className="text-sm text-olive-600 ml-8">Clareza de números, fluxo de caixa, DRE financeira.</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
-                  <h3 className="font-bold text-olive-900 flex items-center">
-                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">2</span>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-1">
+                  <h3 className="font-bold text-olive-900 flex items-center text-lg">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2 shrink-0">2</span>
                     Receita
                   </h3>
-                  <p className="text-sm text-olive-600">Previsibilidade e Cash Collect.</p>
+                  <p className="text-sm text-olive-600 ml-8">Previsibilidade, RMN (Recebimento mínimo necessário) e Cash Collect x vendas.</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
-                  <h3 className="font-bold text-olive-900 flex items-center">
-                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">3</span>
-                    Liberdade
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-1">
+                  <h3 className="font-bold text-olive-900 flex items-center text-lg">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2 shrink-0">3</span>
+                    Liberdade do Empresário
                   </h3>
-                  <p className="text-sm text-olive-600">Pró-labore e separação de contas.</p>
+                  <p className="text-sm text-olive-600 ml-8">pró-labore, salário do sócio.</p>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-2">
-                  <h3 className="font-bold text-olive-900 flex items-center">
-                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2">4</span>
+                <div className="bg-white p-6 rounded-3xl border border-olive-100 shadow-sm space-y-1">
+                  <h3 className="font-bold text-olive-900 flex items-center text-lg">
+                    <span className="w-6 h-6 bg-olive-100 text-olive-600 rounded-full flex items-center justify-center text-xs mr-2 shrink-0">4</span>
                     Lucro Livre
                   </h3>
-                  <p className="text-sm text-olive-600">Reservas (Open Doors), reinvestimento e crescimento.</p>
+                  <p className="text-sm text-olive-600 ml-8">Distribuição saudável, reservas estratégicas (Open Doors e Capital de Giro), reinvestimento consciente e crescimento sustentável.</p>
                 </div>
+              </div>
+
+              <div className="bg-olive-50 p-6 rounded-3xl border border-olive-100 text-center">
+                <p className="text-sm text-olive-700 leading-relaxed">
+                  Após o diagnóstico, você poderá realizar um Raio-X Financeiro personalizado com nossa equipe.
+                  Uma análise técnica e aprofundada da sua estrutura, margens e capacidade real de gerar Lucro Livre.
+                </p>
               </div>
 
               <button
                 onClick={() => setStep('questions')}
-                className="w-full py-6 bg-olive-950 text-white font-bold text-xl rounded-full hover:bg-black transition-all shadow-xl"
+                className="w-full py-6 bg-olive-950 text-white font-bold text-xl rounded-2xl hover:bg-black transition-all shadow-xl uppercase tracking-widest"
               >
                 COMEÇAR DIAGNÓSTICO
               </button>
