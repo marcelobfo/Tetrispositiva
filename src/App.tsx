@@ -755,10 +755,10 @@ export default function App() {
                       result.pontuacaoTotal <= 50 ? "text-orange-500" :
                       result.pontuacaoTotal <= 75 ? "text-blue-500" : "text-emerald-600"
                     )}>
-                      {result.pontuacaoTotal <= 25 && "CAOS FINANCEIRO - OPERADOR"}
-                      {result.pontuacaoTotal > 25 && result.pontuacaoTotal <= 50 && "NEGÓCIO EM CONSTRUÇÃO - TÁTICO"}
-                      {result.pontuacaoTotal > 50 && result.pontuacaoTotal <= 75 && "ESTRUTURA SUSTENTÁVEL - ESTRATÉGICO"}
-                      {result.pontuacaoTotal > 75 && "LUCRO LIVRE - DECISOR"}
+                      {result.pontuacaoTotal <= 25 && "CAOS FINANCEIRO"}
+                      {result.pontuacaoTotal > 25 && result.pontuacaoTotal <= 50 && "NEGÓCIO EM CONSTRUÇÃO"}
+                      {result.pontuacaoTotal > 50 && result.pontuacaoTotal <= 75 && "ESTRUTURA SUSTENTÁVEL"}
+                      {result.pontuacaoTotal > 75 && "LUCRO LIVRE"}
                     </h2>
                     <p className="text-lg text-olive-700 font-light leading-relaxed max-w-md mx-auto">
                       {result.descricao}
